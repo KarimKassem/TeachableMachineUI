@@ -29,6 +29,8 @@ jobs:
           # Il sito vive in https://<utente>.github.io/<repo>/
           BASE_PATH: /${{ github.event.repository.name }}/
       - uses: actions/configure-pages@v5
+        with:
+          enablement: true # attiva GitHub Pages (sorgente Actions) se non lo e' gia'
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
