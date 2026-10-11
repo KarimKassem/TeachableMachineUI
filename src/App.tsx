@@ -92,11 +92,20 @@ export default function App() {
   }
   const serial = serialRef.current
 
+  const stableRef = useRef<number | null>(null)
   const connectSerial = async () => {
     setSerialError(null)
     try {
       await serial.connect(settingsRef.current.baudRate)
-      pushLog('sys', `Collegato a ${settingsRef.current.baudRate} baud`)
+      pushLog('sys', `Collegato a ${settingsRef.current.baudRate} baud. La scheda si riavvia, attendo READY…`)
+      // Aprendo la porta la maggior parte delle schede si resetta e perde ~2 s:
+      // dopo l'avvio rimando il comando della classe attualmente riconosciuta.
+      window.setTimeout(() => {
+        const idx = stableRef.current
+        if (idx === null || serial.status !== 'connected') return
+        const cmd = settingsRef.current.commands[idx] ?? String(idx)
+        if (cmd) void sendRaw(cmd)
+      }, 2500)
     } catch (err) {
       setSerialError((err as Error).message)
     }
@@ -225,6 +234,7 @@ export default function App() {
       if (d.count >= s.stableFrames && d.stable !== cand) {
         d.stable = cand
         setStable(cand >= 0 ? cand : null)
+        stableRef.current = cand >= 0 ? cand : null
         if (s.mode === 'change') emit(cand)
       }
       if (s.mode === 'continuous' && d.stable !== -2 && t - d.lastSentAt >= s.intervalMs) {
@@ -282,6 +292,16 @@ export default function App() {
       onBaudChange={(baudRate) => patchSettings({ baudRate })}
       onConnect={connectSerial}
       onDisconnect={disconnectSerial}
+      lastReceived={[...log].reverse().find((e) => e.dir === 'in')?.text ?? null}
+      testCommands={
+        labels.length > 0
+          ? labels.map((label, i) => ({ label, cmd: settings.commands[i] ?? String(i) }))
+          : [
+              { label: 'classe 0', cmd: '0' },
+              { label: 'classe 1', cmd: '1' },
+            ]
+      }
+      onTest={(cmd) => void sendRaw(cmd)}
     />,
     <CameraStep
       key="camera"
@@ -334,8 +354,17 @@ export default function App() {
           <strong>Chiudi il Monitor seriale di Arduino IDE</strong>: la porta può essere usata da un programma alla volta. Poi premi{' '}
           <em>Collega Arduino</em> qui sopra e scegli la porta.
         </>,
+        <>
+          Appena collegata la scheda si riavvia: il servo fa un movimento di prova e dopo circa 2 secondi risponde{' '}
+          <code>READY</code>. Poi usa i bottoni <strong>Prova</strong> per muovere il servo senza il modello.
+        </>,
       ]}
-      tip="Non hai la scheda sotto mano? Puoi saltare questo passo e provare solo il riconoscimento."
+      tip={
+        <>
+          Se il servo non si muove nemmeno con i bottoni Prova ma vedi <code>OK</code> nelle risposte, il problema è
+          l'alimentazione o il cablaggio del servo, non il software. Non hai la scheda sotto mano? Puoi saltare il passo.
+        </>
+      }
     />,
     <Tutorial
       key="t2"

@@ -36,7 +36,16 @@ void setup() {
   Serial.begin(9600);
   pinMode(LED_BUILTIN, OUTPUT);
   servo.attach(SERVO_PIN);
+
+  // Autotest all'avvio: se il servo non fa questo movimento il problema
+  // e' nel cablaggio o nell'alimentazione, non nel browser.
+  servo.write(LEFT);
+  delay(400);
+  servo.write(RIGHT);
+  delay(400);
   servo.write(CENTER);
+  delay(300);
+
   Serial.println("READY");
 }
 

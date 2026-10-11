@@ -1194,3 +1194,43 @@ code {
 .cmd-table td .segmented {
   vertical-align: middle;
 }
+
+/* ---------- Diagnostica Arduino ---------- */
+.rx {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  border: 2px solid var(--line);
+  background: var(--bg-2);
+}
+
+.rx[data-ok='true'] {
+  border-color: var(--ok);
+  background: var(--ok-soft);
+}
+
+.rx-label {
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.rx-value {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.test {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.test .btn code {
+  background: rgba(26, 26, 46, 0.08);
+}
