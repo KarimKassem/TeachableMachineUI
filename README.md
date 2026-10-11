@@ -10,11 +10,12 @@ PC.
 
 ```
 src/
-  App.tsx              stato dell'app e loop di classificazione
+  App.tsx              stato dell'app, percorso guidato e loop di classificazione
   lib/teachable.ts     carica model.json + metadata.json con TensorFlow.js 4
   lib/serial.ts        wrapper sulla Web Serial API
-  hooks/useCamera.ts   webcam
-  components/          interfaccia (3 passi, live, riconoscimento, regole, monitor seriale)
+  hooks/useCamera.ts   webcam (lo stream sopravvive al cambio di schermata)
+  components/          Wizard + Tutorial (setup), Stage (zone per le ciotole), LivePanel,
+                       PredictionsPanel, SettingsPanel, SerialMonitor
 arduino/sorter/        sketch per la scheda (servo sul pin 9)
 .github/workflows/     deploy automatico su GitHub Pages
 ```
@@ -29,16 +30,23 @@ npm run build      # typecheck + bundle in dist/
 
 ## Come si usa
 
+L'app è un percorso guidato in tre passi, ognuno con il suo tutorial, e poi la schermata del sorter.
+
 1. **Modello**: su Teachable Machine, *Esporta modello → Tensorflow.js → Carica il modello* e
-   incolla il link (`https://teachablemachine.withgoogle.com/models/XXXX/`).
-2. **Arduino**: carica `arduino/sorter/sorter.ino` sulla scheda, poi *Collega Arduino* e scegli la
-   porta nella finestra del browser.
-3. **Webcam**: accendila. Il riconoscimento parte da solo.
+   incolla il link (`https://teachablemachine.withgoogle.com/models/XXXX/`). L'ultimo modello usato
+   viene ricaricato da solo alla visita successiva.
+2. **Arduino**: carica `arduino/sorter/sorter.ino` sulla scheda, chiudi il Monitor seriale di
+   Arduino IDE, poi *Collega Arduino* e scegli la porta nella finestra del browser. Si può saltare
+   per provare solo il riconoscimento.
+3. **Webcam**: accendila e allinea lo scivolo dentro le linee tratteggiate dell'anteprima.
+
+**Schermata del sorter**: la camera sta al centro dello schermo, le zone a sinistra e a destra
+restano libere per le ciotole appoggiate sulla tastiera e si accendono con il colore della classe
+riconosciuta. Il bottone *Impostazioni* apre il pannello con le *Regole di invio* (soglia,
+anti-sfarfallio, modalità di invio, lato e comando per ogni classe) e il *Monitor seriale*.
 
 Per ogni classe il browser invia una riga sulla seriale (default: l'indice della classe, `0\n`,
-`1\n`, …). Nella sezione *Regole di invio* puoi cambiare soglia, anti-sfarfallio, modalità di invio
-e il comando associato a ogni classe. Il *Monitor seriale* mostra ciò che parte e ciò che l'Arduino
-risponde.
+`1\n`, …).
 
 ## Pubblicazione su GitHub Pages
 

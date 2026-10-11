@@ -2,13 +2,26 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 
 export type CameraStatus = 'idle' | 'starting' | 'running' | 'error'
 
+/**
+ * Gestisce lo stream della webcam indipendentemente dall'elemento <video>:
+ * il video può essere smontato e rimontato (cambio schermata) senza perdere
+ * lo stream, perché `attachVideo` lo ricollega a ogni mount.
+ */
 export function useCamera() {
-  const videoRef = useRef<HTMLVideoElement>(null)
+  const videoElRef = useRef<HTMLVideoElement | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
   const [status, setStatus] = useState<CameraStatus>('idle')
   const [error, setError] = useState<string | null>(null)
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([])
   const [deviceId, setDeviceId] = useState<string>('')
+
+  const attachVideo = useCallback((el: HTMLVideoElement | null) => {
+    videoElRef.current = el
+    if (el && streamRef.current && el.srcObject !== streamRef.current) {
+      el.srcObject = streamRef.current
+      void el.play().catch(() => undefined)
+    }
+  }, [])
 
   const refreshDevices = useCallback(async () => {
     try {
@@ -22,7 +35,7 @@ export function useCamera() {
   const stop = useCallback(() => {
     streamRef.current?.getTracks().forEach((t) => t.stop())
     streamRef.current = null
-    if (videoRef.current) videoRef.current.srcObject = null
+    if (videoElRef.current) videoElRef.current.srcObject = null
     setStatus('idle')
   }, [])
 
@@ -37,10 +50,11 @@ export function useCamera() {
           : { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } }
         const stream = await navigator.mediaDevices.getUserMedia({ video, audio: false })
         streamRef.current = stream
-        const el = videoRef.current
-        if (!el) throw new Error('Elemento video non pronto')
-        el.srcObject = stream
-        await el.play()
+        const el = videoElRef.current
+        if (el) {
+          el.srcObject = stream
+          await el.play()
+        }
         setStatus('running')
         await refreshDevices()
         const settings = stream.getVideoTracks()[0]?.getSettings()
@@ -62,5 +76,5 @@ export function useCamera() {
 
   useEffect(() => () => stop(), [stop])
 
-  return { videoRef, status, error, devices, deviceId, start, stop, setDeviceId }
+  return { videoElRef, attachVideo, status, error, devices, deviceId, start, stop, setDeviceId }
 }

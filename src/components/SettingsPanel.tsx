@@ -1,5 +1,5 @@
 import { classColor } from '../lib/palette'
-import type { Settings } from '../lib/types'
+import type { Settings, Side } from '../lib/types'
 
 interface Props {
   settings: Settings
@@ -7,11 +7,22 @@ interface Props {
   onChange: (patch: Partial<Settings>) => void
 }
 
+const SIDES: { value: Side; label: string }[] = [
+  { value: 'left', label: '← Sx' },
+  { value: 'none', label: '–' },
+  { value: 'right', label: 'Dx →' },
+]
+
 export function SettingsPanel({ settings, labels, onChange }: Props) {
   const setCommand = (i: number, value: string) => {
     const commands = [...settings.commands]
     commands[i] = value
     onChange({ commands })
+  }
+  const setSide = (i: number, value: Side) => {
+    const sides = [...settings.sides]
+    sides[i] = value
+    onChange({ sides })
   }
 
   return (
@@ -107,7 +118,9 @@ export function SettingsPanel({ settings, labels, onChange }: Props) {
               Nessuno
             </button>
           </div>
-          <small>Con newline su Arduino usi <code>Serial.parseInt()</code> o <code>readStringUntil('\n')</code>.</small>
+          <small>
+            Con newline su Arduino usi <code>Serial.parseInt()</code> o <code>readStringUntil('\n')</code>.
+          </small>
         </div>
 
         <div className="field">
@@ -127,7 +140,8 @@ export function SettingsPanel({ settings, labels, onChange }: Props) {
           <thead>
             <tr>
               <th>Classe</th>
-              <th>Comando inviato</th>
+              <th>Lato</th>
+              <th>Comando</th>
             </tr>
           </thead>
           <tbody>
@@ -138,6 +152,20 @@ export function SettingsPanel({ settings, labels, onChange }: Props) {
                     <span className="chip-dot" style={{ background: classColor(i), flexShrink: 0 }} />
                     <span>{label}</span>
                   </span>
+                </td>
+                <td>
+                  <div className="segmented segmented-sm" role="group" aria-label={`Lato per ${label}`}>
+                    {SIDES.map((s) => (
+                      <button
+                        key={s.value}
+                        type="button"
+                        aria-pressed={(settings.sides[i] ?? 'none') === s.value}
+                        onClick={() => setSide(i, s.value)}
+                      >
+                        {s.label}
+                      </button>
+                    ))}
+                  </div>
                 </td>
                 <td>
                   <input

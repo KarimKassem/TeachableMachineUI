@@ -842,3 +842,355 @@ code {
 .step-body .row > .btn-wide {
   flex: 1 1 170px;
 }
+
+/* =========================================================
+   Percorso guidato (setup)
+   ========================================================= */
+.wizard {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.wizard-nav {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.wizard-tab {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  border: 2px solid var(--line);
+  background: var(--card);
+  font-weight: 800;
+  cursor: pointer;
+  color: var(--ink-3);
+  transition: border-color 0.15s, color 0.15s, box-shadow 0.15s;
+}
+
+.wizard-tab-num {
+  font-weight: 900;
+  font-size: 15px;
+  min-width: 28px;
+  text-align: center;
+  padding: 2px 6px;
+  border-radius: 8px;
+  background: var(--bg-2);
+}
+
+.wizard-tab[data-done='true'] {
+  color: var(--ink);
+}
+
+.wizard-tab[data-done='true'] .wizard-tab-num {
+  background: var(--ok-soft);
+  color: var(--ok);
+}
+
+.wizard-tab[aria-current='step'] {
+  color: var(--ink);
+  border-color: var(--line-strong);
+  box-shadow: 3px 3px 0 var(--line-strong);
+}
+
+.wizard-tab[aria-current='step'] .wizard-tab-num {
+  background: var(--step-color);
+  color: #fff;
+}
+
+.wizard-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+.wizard-grid[data-step='2'] {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+@media (max-width: 900px) {
+  .wizard-grid[data-step='2'] {
+    grid-template-columns: 1fr;
+  }
+}
+
+.wizard-body .card .step-num {
+  font-size: 34px;
+}
+
+.wizard-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* ---------- Tutorial ---------- */
+.tutorial {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 260px;
+  gap: 20px;
+  align-items: center;
+  background: linear-gradient(135deg, #fff 0%, var(--bg-2) 100%);
+}
+
+@media (max-width: 760px) {
+  .tutorial {
+    grid-template-columns: 1fr;
+  }
+}
+
+.tutorial-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tutorial-steps li {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.tutorial-steps strong,
+.tutorial-steps em {
+  color: var(--ink);
+}
+
+.tutorial-num {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--ink);
+  color: #fff;
+  font-weight: 900;
+  font-size: 13px;
+}
+
+.tip {
+  margin-top: 14px;
+  display: flex;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--warn-soft);
+  border: 2px solid var(--line-strong);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.tutorial-aside {
+  display: grid;
+  place-items: center;
+}
+
+.illu {
+  width: 100%;
+  max-width: 260px;
+  height: auto;
+}
+
+/* =========================================================
+   Palco finale (run)
+   ========================================================= */
+.page[data-phase='run'] {
+  max-width: none;
+  padding-bottom: 24px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.page[data-phase='run'] .header {
+  padding-bottom: 16px;
+}
+
+.stage {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(160px, 1fr) minmax(320px, 640px) minmax(160px, 1fr);
+  gap: 16px;
+  align-items: stretch;
+  min-height: 560px;
+}
+
+@media (max-width: 900px) {
+  .stage {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      'center center'
+      'left right';
+  }
+  .stage-center {
+    grid-area: center;
+  }
+  .zone[data-side='left'] {
+    grid-area: left;
+  }
+  .zone[data-side='right'] {
+    grid-area: right;
+  }
+}
+
+.stage-center {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.stage-center .video-card {
+  aspect-ratio: 4 / 3;
+}
+
+.zone {
+  border: 3px dashed var(--line);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.55);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px;
+  text-align: center;
+  color: var(--ink-3);
+  transition: background 0.25s, border-color 0.25s, color 0.25s, box-shadow 0.25s;
+  min-height: 260px;
+  container-type: inline-size;
+}
+
+.zone[data-hot='true'] {
+  border-style: solid;
+  border-color: var(--line-strong);
+  background: var(--zone-color);
+  color: #fff;
+  box-shadow: var(--shadow-pop);
+}
+
+.zone-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.zone-arrow {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.zone-main {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  width: 100%;
+}
+
+.zone-active {
+  /* scala con la larghezza della zona: non spezza le parole a metà */
+  font-size: clamp(18px, 16cqw, 56px);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  overflow-wrap: anywhere;
+  hyphens: auto;
+  animation: pop 0.25s ease-out;
+}
+
+@keyframes pop {
+  from {
+    transform: scale(0.85);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.zone-empty {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.zone-chips {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.zone-chips .chip {
+  background: var(--card);
+  border-color: var(--line);
+  color: var(--ink);
+  font-size: 15px;
+  padding: 6px 14px;
+}
+
+.zone-foot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+.bowl {
+  color: currentColor;
+}
+
+/* ---------- Pannello a scomparsa ---------- */
+.drawer {
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  gap: 16px;
+  margin-top: 16px;
+  animation: slide-up 0.25s ease-out;
+}
+
+@media (max-width: 900px) {
+  .drawer {
+    grid-template-columns: 1fr;
+  }
+}
+
+@keyframes slide-up {
+  from {
+    transform: translateY(12px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.segmented-sm button {
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+.cmd-table td .segmented {
+  vertical-align: middle;
+}

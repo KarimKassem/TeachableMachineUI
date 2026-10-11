@@ -1,8 +1,8 @@
-import type { CSSProperties, RefObject } from 'react'
+import type { CSSProperties } from 'react'
 import { classColor } from '../lib/palette'
 
 interface Props {
-  videoRef: RefObject<HTMLVideoElement | null>
+  attachVideo: (el: HTMLVideoElement | null) => void
   running: boolean
   mirror: boolean
   fps: number
@@ -10,22 +10,19 @@ interface Props {
   labels: string[]
   command: string | null
   hasModel: boolean
+  compact?: boolean
 }
 
-export function LivePanel({ videoRef, running, mirror, fps, stable, labels, command, hasModel }: Props) {
+export function LivePanel({ attachVideo, running, mirror, fps, stable, labels, command, hasModel, compact }: Props) {
   const label = stable !== null ? labels[stable] : null
   const color = stable !== null ? classColor(stable) : undefined
 
   return (
-    <section className="card video-card">
-      <video ref={videoRef} className={mirror ? 'mirror' : ''} playsInline muted />
+    <section className="card video-card" data-compact={compact ? 'true' : undefined}>
+      <video ref={attachVideo} className={mirror ? 'mirror' : ''} playsInline muted />
       {!running && (
         <div className="video-empty" style={{ position: 'absolute' }}>
           La webcam è spenta.
-          <br />
-          <span className="muted" style={{ color: 'rgba(255,255,255,0.6)' }}>
-            Accendila dal passo 03.
-          </span>
         </div>
       )}
       {running && (
