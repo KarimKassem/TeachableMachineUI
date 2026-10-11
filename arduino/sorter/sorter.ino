@@ -27,8 +27,14 @@
 const int SERVO_PIN = 9;
 
 const int REST = 75;        // posizione di riposo
+
+// Vibrazione da fermo (come nel Tiny Sorter originale): scuote lo scivolo per
+// far scendere gli oggetti uno alla volta. Metti false per tenere il servo
+// fermo a REST finche' non arriva un comando.
+const bool IDLE_SHAKE = true;
 const int IDLE_MIN = 60;    // vibrazione da fermo: estremo basso
 const int IDLE_MAX = 90;    // vibrazione da fermo: estremo alto
+const int IDLE_STEP_MS = 3; // piu' alto = vibrazione piu' lenta e dolce
 const int LEFT_POS = 0;     // scatto verso sinistra
 const int RIGHT_POS = 180;  // scatto verso destra
 
@@ -106,12 +112,17 @@ void loop() {
   }
 
   // Nessun comando: vibrazione da fermo per far scendere l'oggetto.
+  if (!IDLE_SHAKE) {
+    servo.write(REST);
+    delay(20);
+    return;
+  }
   for (int pos = IDLE_MIN; pos <= IDLE_MAX; pos++) {
     servo.write(pos);
-    delay(3);
+    delay(IDLE_STEP_MS);
   }
   for (int pos = IDLE_MAX; pos >= IDLE_MIN; pos--) {
     servo.write(pos);
-    delay(3);
+    delay(IDLE_STEP_MS);
   }
 }
