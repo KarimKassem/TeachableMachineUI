@@ -349,14 +349,16 @@ export default function App() {
         </>,
         <>
           Apri <code>arduino/sorter/sorter.ino</code> con Arduino IDE, scegli la scheda e la porta e premi <strong>Carica</strong>.
+          Lo sketch originale di Tiny Sorter usa WebUSB e <em>non</em> funziona con questa app: serve questo.
         </>,
         <>
           <strong>Chiudi il Monitor seriale di Arduino IDE</strong>: la porta può essere usata da un programma alla volta. Poi premi{' '}
           <em>Collega Arduino</em> qui sopra e scegli la porta.
         </>,
         <>
-          Appena collegata la scheda si riavvia: il servo fa un movimento di prova e dopo circa 2 secondi risponde{' '}
-          <code>READY</code>. Poi usa i bottoni <strong>Prova</strong> per muovere il servo senza il modello.
+          All'accensione il servo fa un movimento di prova, poi vibra da fermo. Quando colleghi la porta la scheda risponde{' '}
+          <code>READY</code> (su Uno e Nano prima si riavvia, circa 2 secondi). Poi usa i bottoni <strong>Prova</strong> per
+          muovere il servo senza il modello.
         </>,
       ]}
       tip={

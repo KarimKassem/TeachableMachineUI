@@ -1,100 +1,117 @@
 /*
-  Teachable Sorter — sketch Arduino
+  Teachable Sorter — sketch per la scheda (Leonardo, Micro, Uno, Nano, ...)
 
-  Riceve dalla seriale (9600 baud) una riga per ogni classe riconosciuta dal
-  browser. Per default il browser invia l'indice della classe seguito da newline:
-      "0\n"  -> prima classe
-      "1\n"  -> seconda classe
-      ...
+  Versione dello sketch originale di Tiny Sorter adattata alla porta seriale
+  normale (USB) al posto di WebUSB. Il browser parla con la scheda tramite la
+  Web Serial API, quindi NON serve la libreria WebUSB e non va ridefinito
+  `Serial`. Serve solo la libreria Servo, inclusa in Arduino IDE.
 
-  Questo esempio replica il comportamento di Tiny Sorter: un servo che spinge
-  l'oggetto a sinistra per la classe 0, a destra per la classe 1 e "vibra" per
-  scuotere gli oggetti quando non riconosce nulla (se dal browser mandi un
-  comando per "nessuna classe", ad es. "-1").
+  Meccanica identica all'originale:
+    - da fermo il servo vibra tra IDLE_MIN e IDLE_MAX per far scendere l'oggetto
+    - classe "sinistra": scatto a LEFT_POS, pausa, ritorno lento a REST
+    - classe "destra":   scatto a RIGHT_POS, pausa, ritorno lento a REST
 
-  Collegamenti:
-    - servo: segnale sul pin 9, VCC a 5V, GND a GND
-    - LED integrato (pin 13) come feedback
+  Protocollo: il browser invia una riga di testo per ogni classe riconosciuta.
+    "0\n" -> SINISTRA (es. cereali)
+    "1\n" -> DESTRA   (es. marshmallow)
+    altro -> ignorato: il servo continua a vibrare (es. classe "vuoto")
+  I comandi associati alle classi si cambiano nel browser, tabella
+  "Regole di invio". La scheda risponde "READY" quando il browser apre la
+  porta e "OK <comando>" a ogni riga ricevuta.
 
-  Nel browser puoi cambiare il comando associato a ogni classe nella tabella
-  "Regole di invio", quindi puoi usare lettere o parole al posto dei numeri:
-  basta adattare la switch qui sotto.
+  Collegamenti: servo segnale -> pin 9, rosso -> 5V, marrone/nero -> GND.
 */
 
 #include <Servo.h>
 
 const int SERVO_PIN = 9;
-const int CENTER = 90;     // posizione di riposo
-const int LEFT = 40;       // posizione per la classe 0
-const int RIGHT = 140;     // posizione per la classe 1
-const int WIGGLE = 8;      // ampiezza della vibrazione
-const unsigned long HOLD_MS = 600;  // quanto tenere la posizione
+
+const int REST = 75;        // posizione di riposo
+const int IDLE_MIN = 60;    // vibrazione da fermo: estremo basso
+const int IDLE_MAX = 90;    // vibrazione da fermo: estremo alto
+const int LEFT_POS = 0;     // scatto verso sinistra
+const int RIGHT_POS = 180;  // scatto verso destra
+
+const unsigned long HOLD_MS = 2000;   // quanto resta nella posizione di scarico
+const unsigned long SETTLE_MS = 1000; // pausa dopo il ritorno, prima di ripartire
 
 Servo servo;
+bool announced = false;
 
 void setup() {
   Serial.begin(9600);
+  Serial.setTimeout(50);
   pinMode(LED_BUILTIN, OUTPUT);
   servo.attach(SERVO_PIN);
 
-  // Autotest all'avvio: se il servo non fa questo movimento il problema
+  // Autotest all'accensione: se il servo non fa questo movimento il problema
   // e' nel cablaggio o nell'alimentazione, non nel browser.
-  servo.write(LEFT);
-  delay(400);
-  servo.write(RIGHT);
-  delay(400);
-  servo.write(CENTER);
+  servo.write(LEFT_POS);
+  delay(500);
+  servo.write(RIGHT_POS);
+  delay(500);
+  servo.write(REST);
   delay(300);
-
-  Serial.println("READY");
 }
 
-void moveTo(int angle) {
+// Scatto verso `target`, pausa, poi ritorno graduale a REST.
+void sortTo(int target, const char* label) {
   digitalWrite(LED_BUILTIN, HIGH);
-  servo.write(angle);
+  servo.write(target);
   delay(HOLD_MS);
-  servo.write(CENTER);
-  digitalWrite(LED_BUILTIN, LOW);
-}
 
-void wiggle() {
-  for (int i = 0; i < 4; i++) {
-    servo.write(CENTER + WIGGLE);
-    delay(60);
-    servo.write(CENTER - WIGGLE);
-    delay(60);
+  int step = (target < REST) ? 1 : -1;
+  for (int pos = target; pos != REST; pos += step) {
+    servo.write(pos);
+    delay(8);
   }
-  servo.write(CENTER);
+  servo.write(REST);
+  delay(SETTLE_MS);
+
+  digitalWrite(LED_BUILTIN, LOW);
+  Serial.println(label);
 }
 
 void loop() {
-  if (Serial.available() == 0) return;
+  // Su Leonardo/Micro `Serial` diventa vero solo quando il browser apre la
+  // porta: annunciamo READY in quel momento. Su Uno/Nano e' sempre vero e
+  // READY parte subito dopo il reset che segue l'apertura della porta.
+  if (Serial && !announced) {
+    Serial.println("READY");
+    announced = true;
+  } else if (!Serial) {
+    announced = false;
+  }
 
-  String line = Serial.readStringUntil('\n');
-  line.trim();
-  if (line.length() == 0) return;
+  if (Serial.available()) {
+    String line = Serial.readStringUntil('\n');
+    line.trim();
+    if (line.length() > 0) {
+      Serial.print("OK ");
+      Serial.println(line);
 
-  int cls = line.toInt();  // "0" -> 0, "1" -> 1, testo non numerico -> 0
-
-  // Risposta di conferma: compare nel Monitor seriale del browser
-  Serial.print("OK ");
-  Serial.println(line);
-
-  if (line == "-1") {
-    wiggle();
+      if (line == "0") {
+        sortTo(LEFT_POS, "sinistra");
+      } else if (line == "1") {
+        sortTo(RIGHT_POS, "destra");
+      }
+      // qualsiasi altro comando (es. la classe "vuoto") non muove nulla
+    }
+    // Scarta i comandi arrivati mentre il servo era in movimento, cosi' non
+    // si accumulano scatti in ritardo.
+    while (Serial.available()) {
+      Serial.read();
+    }
     return;
   }
 
-  switch (cls) {
-    case 0:
-      moveTo(LEFT);
-      break;
-    case 1:
-      moveTo(RIGHT);
-      break;
-    default:
-      // classi oltre la seconda: aggiungi qui altri case
-      wiggle();
-      break;
+  // Nessun comando: vibrazione da fermo per far scendere l'oggetto.
+  for (int pos = IDLE_MIN; pos <= IDLE_MAX; pos++) {
+    servo.write(pos);
+    delay(3);
+  }
+  for (int pos = IDLE_MAX; pos >= IDLE_MIN; pos--) {
+    servo.write(pos);
+    delay(3);
   }
 }

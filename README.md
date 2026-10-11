@@ -16,7 +16,7 @@ src/
   hooks/useCamera.ts   webcam (lo stream sopravvive al cambio di schermata)
   components/          Wizard + Tutorial (setup), Stage (zone per le ciotole), LivePanel,
                        PredictionsPanel, SettingsPanel, SerialMonitor
-arduino/sorter/        sketch per la scheda (servo sul pin 9)
+arduino/sorter/        sketch per la scheda (servo sul pin 9), versione seriale di quello di Tiny Sorter
 .github/workflows/     deploy automatico su GitHub Pages
 ```
 
