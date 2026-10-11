@@ -136,6 +136,7 @@ export function SettingsPanel({ settings, labels, onChange }: Props) {
       </div>
 
       {labels.length > 0 && (
+        <div className="cmd-table-wrap">
         <table className="cmd-table">
           <thead>
             <tr>
@@ -178,6 +179,7 @@ export function SettingsPanel({ settings, labels, onChange }: Props) {
             ))}
           </tbody>
         </table>
+        </div>
       )}
     </section>
   )

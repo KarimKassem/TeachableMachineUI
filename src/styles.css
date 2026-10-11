@@ -908,12 +908,13 @@ code {
   gap: 16px;
 }
 
-.wizard-grid[data-step='2'] {
+.wizard-grid[data-step='1'] {
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: start; /* la card non si stira all'altezza dell'anteprima */
 }
 
 @media (max-width: 900px) {
-  .wizard-grid[data-step='2'] {
+  .wizard-grid[data-step='1'] {
     grid-template-columns: 1fr;
   }
 }
@@ -1233,4 +1234,50 @@ code {
 
 .test .btn code {
   background: rgba(26, 26, 46, 0.08);
+}
+
+/* ---------- Rifiniture ---------- */
+/* Bottoni nell'intestazione: stessa forma dei badge di stato, senza ombra dura */
+.pills .btn {
+  border-radius: 999px;
+  box-shadow: none;
+  padding: 6px 14px;
+  font-size: 13px;
+}
+
+.pills .btn:hover:not(:disabled) {
+  transform: none;
+  box-shadow: none;
+  background: var(--bg-2);
+}
+
+.pills .btn-primary:hover:not(:disabled) {
+  background: var(--primary);
+}
+
+/* Schede del percorso: il titolo non va a capo */
+.wizard-tab {
+  min-width: 0;
+}
+
+.wizard-tab > span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Tabella comandi: scorre in orizzontale se la colonna e' stretta */
+.cmd-table-wrap {
+  overflow-x: auto;
+  margin-top: 8px;
+}
+
+.cmd-table td,
+.cmd-table th {
+  white-space: nowrap;
+}
+
+/* La card del passo Webcam ha la stessa altezza minima dell'anteprima */
+.wizard-grid[data-step='1'] > .card:first-child {
+  min-height: 0;
 }

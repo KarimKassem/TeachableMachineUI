@@ -17,7 +17,7 @@ export function CameraStep({ status, error, devices, deviceId, mirror, onStart, 
 
   return (
     <StepCard
-      number="03"
+      number="02"
       title="Webcam"
       hint="Accendi la camera: il riconoscimento parte da solo quando il modello è pronto."
       color="#ff5c8a"

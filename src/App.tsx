@@ -97,15 +97,7 @@ export default function App() {
     setSerialError(null)
     try {
       await serial.connect(settingsRef.current.baudRate)
-      pushLog('sys', `Collegato a ${settingsRef.current.baudRate} baud. La scheda si riavvia, attendo READY…`)
-      // Aprendo la porta la maggior parte delle schede si resetta e perde ~2 s:
-      // dopo l'avvio rimando il comando della classe attualmente riconosciuta.
-      window.setTimeout(() => {
-        const idx = stableRef.current
-        if (idx === null || serial.status !== 'connected') return
-        const cmd = settingsRef.current.commands[idx] ?? String(idx)
-        if (cmd) void sendRaw(cmd)
-      }, 2500)
+      pushLog('sys', `Collegato a ${settingsRef.current.baudRate} baud, attendo READY…`)
     } catch (err) {
       setSerialError((err as Error).message)
     }
@@ -255,7 +247,26 @@ export default function App() {
   const labels = model?.labels ?? []
   const currentCommand = stable !== null ? (settings.commands[stable] ?? String(stable)) : settings.idleCommand || null
 
-  const stepDone = [modelReady, serialConnected || arduinoSkipped, cameraRunning]
+  const stepDone = [modelReady, cameraRunning, serialConnected || arduinoSkipped]
+
+  // "start" fa partire la vibrazione del servo, "stop" lo riporta a riposo.
+  const startSorter = () => {
+    setPhase('run')
+    setDrawerOpen(false)
+    if (serial.status !== 'connected') return
+    void sendRaw('start')
+    // Se una classe e' gia' riconosciuta la rimando: in modalita' "al cambio"
+    // altrimenti partirebbe solo al prossimo cambio di classe.
+    const idx = stableRef.current
+    if (idx !== null) {
+      const cmd = settingsRef.current.commands[idx] ?? String(idx)
+      if (cmd) window.setTimeout(() => void sendRaw(cmd), 150)
+    }
+  }
+  const stopSorter = () => {
+    if (serial.status === 'connected') void sendRaw('stop')
+    setPhase('setup')
+  }
   const canNext = stepDone[step]
 
   const livePanel = (compact: boolean) => (
@@ -283,6 +294,17 @@ export default function App() {
       onLoad={loadModel}
       onUnload={unloadModel}
     />,
+    <CameraStep
+      key="camera"
+      status={camera.status}
+      error={camera.error}
+      devices={camera.devices}
+      deviceId={camera.deviceId}
+      mirror={settings.mirror}
+      onStart={camera.start}
+      onStop={camera.stop}
+      onMirror={(mirror) => patchSettings({ mirror })}
+    />,
     <SerialStep
       key="serial"
       status={serialStatus}
@@ -302,17 +324,6 @@ export default function App() {
             ]
       }
       onTest={(cmd) => void sendRaw(cmd)}
-    />,
-    <CameraStep
-      key="camera"
-      status={camera.status}
-      error={camera.error}
-      devices={camera.devices}
-      deviceId={camera.deviceId}
-      mirror={settings.mirror}
-      onStart={camera.start}
-      onStop={camera.stop}
-      onMirror={(mirror) => patchSettings({ mirror })}
     />,
   ]
 
@@ -339,6 +350,20 @@ export default function App() {
       tip="Scatta le foto nelle stesse condizioni di luce in cui userai il sorter: il modello impara anche lo sfondo."
     />,
     <Tutorial
+      key="t2"
+      title="Come montare il sorter"
+      aside={<MountIllustration />}
+      steps={[
+        <>Appoggia la struttura di cartone sul bordo superiore dello schermo, con lo scivolo davanti alla webcam.</>,
+        <>Metti le due ciotole sulla tastiera, una a <strong>sinistra</strong> e una a <strong>destra</strong>: nella schermata finale lo schermo lascia libere quelle due zone.</>,
+        <>
+          Accendi la webcam e controlla l'anteprima: lo scivolo deve stare dentro le <strong>linee tratteggiate</strong>, che
+          mostrano il quadrato analizzato dal modello.
+        </>,
+      ]}
+      tip="Lascia lo specchio attivo: Teachable Machine allena con la camera specchiata, quindi il modello si aspetta la stessa vista."
+    />,
+    <Tutorial
       key="t1"
       title="Come collegare l'Arduino"
       aside={<ArduinoIllustration />}
@@ -356,9 +381,9 @@ export default function App() {
           <em>Collega Arduino</em> qui sopra e scegli la porta.
         </>,
         <>
-          All'accensione il servo fa un movimento di prova, poi vibra da fermo. Quando colleghi la porta la scheda risponde{' '}
-          <code>READY</code> (su Uno e Nano prima si riavvia, circa 2 secondi). Poi usa i bottoni <strong>Prova</strong> per
-          muovere il servo senza il modello.
+          Quando colleghi la porta la scheda risponde <code>READY</code> (su Uno e Nano prima si riavvia, circa 2 secondi) e il
+          servo resta fermo. Usa i bottoni <strong>Prova</strong> per muoverlo senza il modello. La vibrazione dello scivolo
+          parte solo con <strong>Avvia il sorter</strong>.
         </>,
       ]}
       tip={
@@ -367,20 +392,6 @@ export default function App() {
           l'alimentazione o il cablaggio del servo, non il software. Non hai la scheda sotto mano? Puoi saltare il passo.
         </>
       }
-    />,
-    <Tutorial
-      key="t2"
-      title="Come montare il sorter"
-      aside={<MountIllustration />}
-      steps={[
-        <>Appoggia la struttura di cartone sul bordo superiore dello schermo, con lo scivolo davanti alla webcam.</>,
-        <>Metti le due ciotole sulla tastiera, una a <strong>sinistra</strong> e una a <strong>destra</strong>: nella schermata finale lo schermo lascia libere quelle due zone.</>,
-        <>
-          Accendi la webcam e controlla l'anteprima: lo scivolo deve stare dentro le <strong>linee tratteggiate</strong>, che
-          mostrano il quadrato analizzato dal modello.
-        </>,
-      ]}
-      tip="Lascia lo specchio attivo: Teachable Machine allena con la camera specchiata, quindi il modello si aspetta la stessa vista."
     />,
   ]
 
@@ -413,7 +424,7 @@ export default function App() {
               >
                 ⚙︎ {drawerOpen ? 'Nascondi' : 'Impostazioni'}
               </button>
-              <button type="button" className="btn btn-sm btn-ghost" onClick={() => setPhase('setup')}>
+              <button type="button" className="btn btn-sm btn-ghost" onClick={stopSorter}>
                 ← Setup
               </button>
             </>
@@ -448,14 +459,14 @@ export default function App() {
           onPrev={() => setStep((s) => Math.max(0, s - 1))}
           onNext={() => {
             if (step < 2) setStep(step + 1)
-            else setPhase('run')
+            else startSorter()
           }}
-          onSkip={step === 1 ? () => setArduinoSkipped(true) : undefined}
+          onSkip={step === 2 ? () => setArduinoSkipped(true) : undefined}
           onJump={setStep}
         >
           <div className="wizard-grid" data-step={step}>
             {stepCards[step]}
-            {step === 2 && livePanel(true)}
+            {step === 1 && livePanel(true)}
           </div>
           {tutorials[step]}
         </Wizard>

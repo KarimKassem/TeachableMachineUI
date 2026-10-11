@@ -36,7 +36,7 @@ export function SerialStep({
 
   return (
     <StepCard
-      number="02"
+      number="03"
       title="Arduino"
       hint="Collega la scheda via USB. Il browser ti chiederà quale porta usare."
       color="#00b894"

@@ -2,8 +2,8 @@ import type { CSSProperties, ReactNode } from 'react'
 
 export const WIZARD_STEPS = [
   { number: '01', title: 'Modello', color: '#6c47ff' },
-  { number: '02', title: 'Arduino', color: '#00b894' },
-  { number: '03', title: 'Webcam', color: '#ff5c8a' },
+  { number: '02', title: 'Webcam', color: '#ff5c8a' },
+  { number: '03', title: 'Arduino', color: '#00b894' },
 ] as const
 
 interface Props {

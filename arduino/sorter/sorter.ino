@@ -11,10 +11,14 @@
     - classe "sinistra": scatto a LEFT_POS, pausa, ritorno lento a REST
     - classe "destra":   scatto a RIGHT_POS, pausa, ritorno lento a REST
 
-  Protocollo: il browser invia una riga di testo per ogni classe riconosciuta.
-    "0\n" -> SINISTRA (es. cereali)
-    "1\n" -> DESTRA   (es. marshmallow)
-    altro -> ignorato: il servo continua a vibrare (es. classe "vuoto")
+  Protocollo: il browser invia una riga di testo per ogni evento.
+    "start\n" -> il sorter parte: il servo inizia a vibrare da fermo
+    "stop\n"  -> il sorter si ferma: servo a riposo
+    "0\n"     -> SINISTRA (es. cereali)
+    "1\n"     -> DESTRA   (es. marshmallow)
+    altro     -> ignorato (es. classe "vuoto")
+  Finche' non arriva "start" il servo resta fermo a REST (i bottoni Prova del
+  browser lo muovono comunque).
   I comandi associati alle classi si cambiano nel browser, tabella
   "Regole di invio". La scheda risponde "READY" quando il browser apre la
   porta e "OK <comando>" a ogni riga ricevuta.
@@ -28,9 +32,9 @@ const int SERVO_PIN = 9;
 
 const int REST = 75;        // posizione di riposo
 
-// Vibrazione da fermo (come nel Tiny Sorter originale): scuote lo scivolo per
-// far scendere gli oggetti uno alla volta. Metti false per tenere il servo
-// fermo a REST finche' non arriva un comando.
+// Vibrazione mentre il sorter e' avviato (come nel Tiny Sorter originale):
+// scuote lo scivolo per far scendere gli oggetti uno alla volta. Metti false
+// per tenere il servo fermo a REST anche durante il funzionamento.
 const bool IDLE_SHAKE = true;
 const int IDLE_MIN = 60;    // vibrazione da fermo: estremo basso
 const int IDLE_MAX = 90;    // vibrazione da fermo: estremo alto
@@ -43,6 +47,7 @@ const unsigned long SETTLE_MS = 1000; // pausa dopo il ritorno, prima di riparti
 
 Servo servo;
 bool announced = false;
+bool running = false;  // true tra "start" e "stop"
 
 void setup() {
   Serial.begin(9600);
@@ -86,7 +91,9 @@ void loop() {
     Serial.println("READY");
     announced = true;
   } else if (!Serial) {
+    // Browser scollegato: ci fermiamo in sicurezza.
     announced = false;
+    running = false;
   }
 
   if (Serial.available()) {
@@ -96,7 +103,14 @@ void loop() {
       Serial.print("OK ");
       Serial.println(line);
 
-      if (line == "0") {
+      if (line == "start") {
+        running = true;
+        Serial.println("START");
+      } else if (line == "stop") {
+        running = false;
+        servo.write(REST);
+        Serial.println("STOP");
+      } else if (line == "0") {
         sortTo(LEFT_POS, "sinistra");
       } else if (line == "1") {
         sortTo(RIGHT_POS, "destra");
@@ -111,8 +125,8 @@ void loop() {
     return;
   }
 
-  // Nessun comando: vibrazione da fermo per far scendere l'oggetto.
-  if (!IDLE_SHAKE) {
+  // Nessun comando. Fermo finche' il sorter non e' avviato.
+  if (!running || !IDLE_SHAKE) {
     servo.write(REST);
     delay(20);
     return;

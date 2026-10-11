@@ -35,18 +35,36 @@ L'app è un percorso guidato in tre passi, ognuno con il suo tutorial, e poi la 
 1. **Modello**: su Teachable Machine, *Esporta modello → Tensorflow.js → Carica il modello* e
    incolla il link (`https://teachablemachine.withgoogle.com/models/XXXX/`). L'ultimo modello usato
    viene ricaricato da solo alla visita successiva.
-2. **Arduino**: carica `arduino/sorter/sorter.ino` sulla scheda, chiudi il Monitor seriale di
-   Arduino IDE, poi *Collega Arduino* e scegli la porta nella finestra del browser. Si può saltare
-   per provare solo il riconoscimento.
-3. **Webcam**: accendila e allinea lo scivolo dentro le linee tratteggiate dell'anteprima.
+2. **Webcam**: accendila e allinea lo scivolo dentro le linee tratteggiate dell'anteprima.
+3. **Arduino**: carica `arduino/sorter/sorter.ino` sulla scheda, chiudi il Monitor seriale di
+   Arduino IDE, poi *Collega Arduino* e scegli la porta nella finestra del browser. I bottoni
+   *Prova* muovono il servo senza passare dal modello. Il passo si può saltare per provare solo il
+   riconoscimento.
 
 **Schermata del sorter**: la camera sta al centro dello schermo, le zone a sinistra e a destra
 restano libere per le ciotole appoggiate sulla tastiera e si accendono con il colore della classe
 riconosciuta. Il bottone *Impostazioni* apre il pannello con le *Regole di invio* (soglia,
 anti-sfarfallio, modalità di invio, lato e comando per ogni classe) e il *Monitor seriale*.
 
-Per ogni classe il browser invia una riga sulla seriale (default: l'indice della classe, `0\n`,
-`1\n`, …).
+## Protocollo seriale
+
+Il browser invia righe di testo a 9600 baud:
+
+| Riga    | Quando                                   | Cosa fa lo sketch                                      |
+| ------- | ---------------------------------------- | ------------------------------------------------------ |
+| `start` | premi *Avvia il sorter*                  | il servo inizia a vibrare per far scendere gli oggetti |
+| `stop`  | torni al setup                           | servo fermo a riposo                                   |
+| `0`     | classe assegnata a sinistra riconosciuta | scatto a sinistra, pausa, ritorno lento                |
+| `1`     | classe assegnata a destra riconosciuta   | scatto a destra, pausa, ritorno lento                  |
+| altro   | per esempio la classe "vuoto"            | ignorato                                               |
+
+Il comando di ogni classe è l'indice della classe per default e si cambia nella tabella *Regole di
+invio*. La scheda risponde `READY` quando il browser apre la porta e `OK <riga>` a ogni comando.
+Finché non arriva `start` il servo resta fermo.
+
+Lo sketch originale di Tiny Sorter usa la libreria WebUSB (`#define Serial WebUSBSerial`): la scheda
+ascolta sul canale WebUSB e ignora la porta seriale, quindi con questa app il servo non si muove.
+`arduino/sorter/sorter.ino` è la stessa meccanica portata sulla seriale normale.
 
 ## Pubblicazione su GitHub Pages
 
