@@ -13,8 +13,6 @@ export interface Settings {
   intervalMs: number
   /** Specchia la webcam (Teachable Machine allena con la camera specchiata). */
   mirror: boolean
-  /** Terminatore di riga inviato dopo ogni comando. */
-  lineEnding: '\n' | ''
   /** Comando per ogni classe, nello stesso ordine delle etichette del modello. */
   commands: string[]
   /** Lato (sinistra/destra/nessuno) per ogni classe. */
@@ -30,7 +28,6 @@ export const DEFAULT_SETTINGS: Settings = {
   mode: 'change',
   intervalMs: 500,
   mirror: true,
-  lineEnding: '\n',
   commands: [],
   sides: [],
   idleCommand: '',

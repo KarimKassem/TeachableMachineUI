@@ -183,7 +183,7 @@ a {
 .steps {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
+  gap: 24px;
   margin-bottom: 20px;
 }
 
@@ -439,7 +439,7 @@ a {
 .live {
   display: grid;
   grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
-  gap: 16px;
+  gap: 24px;
   margin-bottom: 20px;
 }
 
@@ -849,7 +849,7 @@ code {
 .wizard {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 24px;
 }
 
 .wizard-nav {
@@ -905,7 +905,7 @@ code {
 .wizard-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 16px;
+  gap: 24px;
 }
 
 .wizard-grid[data-step='1'] {
@@ -1022,8 +1022,10 @@ code {
 .stage {
   flex: 1;
   display: grid;
-  grid-template-columns: minmax(160px, 1fr) minmax(320px, 640px) minmax(160px, 1fr);
-  gap: 16px;
+  /* la camera e' 4:3: la sua larghezza e' limitata in base all'altezza dello
+     schermo, cosi' sotto resta spazio per il pannello Riconoscimento */
+  grid-template-columns: minmax(160px, 1fr) minmax(320px, min(640px, calc((100vh - 360px) * 4 / 3))) minmax(160px, 1fr);
+  gap: 24px;
   align-items: stretch;
   min-height: 560px;
 }
@@ -1049,7 +1051,7 @@ code {
 .stage-center {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 20px;
   min-width: 0;
 }
 
@@ -1165,8 +1167,8 @@ code {
 .drawer {
   display: grid;
   grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
-  gap: 16px;
-  margin-top: 16px;
+  gap: 24px;
+  margin-top: 24px;
   animation: slide-up 0.25s ease-out;
 }
 
@@ -1280,4 +1282,166 @@ code {
 /* La card del passo Webcam ha la stessa altezza minima dell'anteprima */
 .wizard-grid[data-step='1'] > .card:first-child {
   min-height: 0;
+}
+
+/* =========================================================
+   Spaziatura, bottoni in evidenza, fumetti (i)
+   ========================================================= */
+.wizard-body {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.test .chips {
+  gap: 10px;
+}
+
+.pills {
+  gap: 10px;
+  align-items: center;
+}
+
+/* Separatore tra i badge di stato e i bottoni di azione */
+.header-sep {
+  width: 2px;
+  height: 26px;
+  background: var(--line);
+  border-radius: 2px;
+  margin: 0 4px;
+}
+
+/* Bottoni nell'intestazione del sorter: pieni e ben distinti dai badge */
+.pills .btn-primary {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--line-strong);
+  box-shadow: 3px 3px 0 var(--line-strong);
+}
+
+.pills .btn-primary:hover:not(:disabled) {
+  background: #5a39e6;
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 var(--line-strong);
+}
+
+.btn-ink {
+  background: var(--ink);
+  color: #fff;
+}
+
+.pills .btn-ink {
+  box-shadow: 3px 3px 0 rgba(26, 26, 46, 0.25);
+}
+
+.pills .btn-ink:hover:not(:disabled) {
+  background: #2d2d4a;
+  transform: translate(-1px, -1px);
+}
+
+/* Etichetta di un'impostazione con il suo pallino (i) */
+.field-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.field[data-disabled='true'] {
+  opacity: 0.5;
+}
+
+.settings-span {
+  grid-column: 1 / -1;
+}
+
+.info {
+  position: relative;
+  display: inline-flex;
+}
+
+.info-btn {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--line-strong);
+  background: var(--accent);
+  color: var(--ink);
+  font-family: Georgia, 'Times New Roman', serif;
+  font-style: italic;
+  font-weight: 700;
+  font-size: 12px;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+  cursor: help;
+  padding: 0;
+  transition: transform 0.1s;
+}
+
+.info-btn:hover,
+.info-btn:focus-visible {
+  transform: scale(1.15);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--warn-soft);
+}
+
+.info-bubble {
+  display: none;
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 10px);
+  transform: translateX(-50%);
+  width: 260px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--ink);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.45;
+  text-transform: none;
+  letter-spacing: 0;
+  text-align: left;
+  white-space: normal;
+  box-shadow: 0 10px 24px rgba(26, 26, 46, 0.25);
+  z-index: 20;
+  animation: bubble-in 0.15s ease-out;
+}
+
+.info-bubble::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 7px solid transparent;
+  border-top-color: var(--ink);
+}
+
+.info:hover .info-bubble,
+.info:focus-within .info-bubble,
+.info[data-pinned='true'] .info-bubble {
+  display: block;
+}
+
+@keyframes bubble-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* Nella tabella il fumetto deve poter uscire dal contenitore scorrevole */
+.cmd-table-wrap {
+  overflow: visible;
+}
+
+@media (max-width: 560px) {
+  .cmd-table-wrap {
+    overflow-x: auto;
+  }
 }

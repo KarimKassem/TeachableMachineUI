@@ -1,3 +1,4 @@
+import { Info } from './Info'
 import { classColor } from '../lib/palette'
 import type { Settings, Side } from '../lib/types'
 
@@ -27,11 +28,21 @@ export function SettingsPanel({ settings, labels, onChange }: Props) {
 
   return (
     <section className="card">
-      <h3 className="panel-title">Regole di invio</h3>
+      <h3 className="panel-title">
+        Regole di invio
+        <span className="muted">passa sulle (i) per capire ogni voce</span>
+      </h3>
       <div className="settings-grid">
         <div className="field">
           <label>
-            Soglia di confidenza <output>{Math.round(settings.threshold * 100)}%</output>
+            <span className="field-name">
+              Soglia di confidenza
+              <Info label="Cos'è la soglia di confidenza">
+                Quanto deve essere sicuro il modello prima di dire «è questo!». Alta = meno errori ma più oggetti
+                ignorati. Bassa = più reattivo ma rischia di confondersi. 75% è un buon punto di partenza.
+              </Info>
+            </span>
+            <output>{Math.round(settings.threshold * 100)}%</output>
           </label>
           <input
             type="range"
@@ -41,12 +52,18 @@ export function SettingsPanel({ settings, labels, onChange }: Props) {
             value={settings.threshold}
             onChange={(e) => onChange({ threshold: Number(e.target.value) })}
           />
-          <small>Sotto questa confidenza la classe viene ignorata.</small>
         </div>
 
         <div className="field">
           <label>
-            Stabilità <output>{settings.stableFrames} frame</output>
+            <span className="field-name">
+              Stabilità
+              <Info label="Cos'è la stabilità">
+                Per quanti fotogrammi di fila la stessa classe deve vincere prima che il sorter agisca. Evita che il
+                servo scatti per un attimo di indecisione mentre l'oggetto sta ancora scendendo.
+              </Info>
+            </span>
+            <output>{settings.stableFrames} frame</output>
           </label>
           <input
             type="range"
@@ -56,11 +73,19 @@ export function SettingsPanel({ settings, labels, onChange }: Props) {
             value={settings.stableFrames}
             onChange={(e) => onChange({ stableFrames: Number(e.target.value) })}
           />
-          <small>Frame consecutivi uguali prima di accettare la classe. Più alto = meno sfarfallio.</small>
         </div>
 
         <div className="field">
-          <label>Quando inviare</label>
+          <label>
+            <span className="field-name">
+              Quando inviare
+              <Info label="Quando viene inviato il comando">
+                «Al cambio»: un solo comando ogni volta che la classe riconosciuta cambia, il più pulito per il
+                sorter. «In continuo»: ripete il comando della classe corrente a intervalli regolari, utile se
+                l'Arduino può perdersi un messaggio.
+              </Info>
+            </span>
+          </label>
           <div className="segmented" role="group">
             <button
               type="button"
@@ -77,16 +102,18 @@ export function SettingsPanel({ settings, labels, onChange }: Props) {
               In continuo
             </button>
           </div>
-          <small>
-            {settings.mode === 'change'
-              ? 'Un solo comando ogni volta che la classe riconosciuta cambia.'
-              : 'Ripete il comando della classe corrente a intervalli regolari.'}
-          </small>
         </div>
 
-        <div className="field">
+        <div className="field" data-disabled={settings.mode !== 'continuous'}>
           <label>
-            Intervallo <output>{settings.intervalMs} ms</output>
+            <span className="field-name">
+              Intervallo
+              <Info label="Cos'è l'intervallo">
+                Ogni quanti millisecondi ripetere il comando in modalità «in continuo». Nella modalità «al cambio»
+                non serve e resta spento.
+              </Info>
+            </span>
+            <output>{settings.intervalMs} ms</output>
           </label>
           <input
             type="range"
@@ -97,88 +124,88 @@ export function SettingsPanel({ settings, labels, onChange }: Props) {
             onChange={(e) => onChange({ intervalMs: Number(e.target.value) })}
             disabled={settings.mode !== 'continuous'}
           />
-          <small>Solo in modalità continua.</small>
         </div>
 
-        <div className="field">
-          <label>Fine riga</label>
-          <div className="segmented" role="group">
-            <button
-              type="button"
-              aria-pressed={settings.lineEnding === '\n'}
-              onClick={() => onChange({ lineEnding: '\n' })}
-            >
-              Newline (\n)
-            </button>
-            <button
-              type="button"
-              aria-pressed={settings.lineEnding === ''}
-              onClick={() => onChange({ lineEnding: '' })}
-            >
-              Nessuno
-            </button>
-          </div>
-          <small>
-            Con newline su Arduino usi <code>Serial.parseInt()</code> o <code>readStringUntil('\n')</code>.
-          </small>
-        </div>
-
-        <div className="field">
-          <label>Nessuna classe riconosciuta</label>
+        <div className="field settings-span">
+          <label>
+            <span className="field-name">
+              Nessuna classe riconosciuta
+              <Info label="Comando quando non riconosce nulla">
+                Cosa mandare all'Arduino quando nessuna classe supera la soglia, per esempio con lo scivolo vuoto.
+                Lascialo vuoto per non mandare nulla: lo sketch continua a vibrare per far scendere l'oggetto
+                successivo.
+              </Info>
+            </span>
+          </label>
           <input
             className="input mono"
             placeholder="(non inviare nulla)"
             value={settings.idleCommand}
             onChange={(e) => onChange({ idleCommand: e.target.value })}
           />
-          <small>Comando opzionale quando nessuna classe supera la soglia.</small>
         </div>
       </div>
 
       {labels.length > 0 && (
         <div className="cmd-table-wrap">
-        <table className="cmd-table">
-          <thead>
-            <tr>
-              <th>Classe</th>
-              <th>Lato</th>
-              <th>Comando</th>
-            </tr>
-          </thead>
-          <tbody>
-            {labels.map((label, i) => (
-              <tr key={label + i}>
-                <td>
-                  <span className="bar-label">
-                    <span className="chip-dot" style={{ background: classColor(i), flexShrink: 0 }} />
-                    <span>{label}</span>
+          <table className="cmd-table">
+            <thead>
+              <tr>
+                <th>Classe</th>
+                <th>
+                  <span className="field-name">
+                    Lato
+                    <Info label="Cos'è il lato">
+                      In quale ciotola finisce questa classe. Nella schermata del sorter si accende la zona
+                      corrispondente. «–» per le classi che non vanno smistate, come «vuoto».
+                    </Info>
                   </span>
-                </td>
-                <td>
-                  <div className="segmented segmented-sm" role="group" aria-label={`Lato per ${label}`}>
-                    {SIDES.map((s) => (
-                      <button
-                        key={s.value}
-                        type="button"
-                        aria-pressed={(settings.sides[i] ?? 'none') === s.value}
-                        onClick={() => setSide(i, s.value)}
-                      >
-                        {s.label}
-                      </button>
-                    ))}
-                  </div>
-                </td>
-                <td>
-                  <input
-                    className="input mono"
-                    value={settings.commands[i] ?? String(i)}
-                    onChange={(e) => setCommand(i, e.target.value)}
-                  />
-                </td>
+                </th>
+                <th>
+                  <span className="field-name">
+                    Comando
+                    <Info label="Cos'è il comando">
+                      Il testo che il browser manda all'Arduino quando riconosce questa classe. Lo sketch in
+                      dotazione capisce 0 = scatto a sinistra, 1 = scatto a destra, tutto il resto viene ignorato.
+                    </Info>
+                  </span>
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {labels.map((label, i) => (
+                <tr key={label + i}>
+                  <td>
+                    <span className="bar-label">
+                      <span className="chip-dot" style={{ background: classColor(i), flexShrink: 0 }} />
+                      <span>{label}</span>
+                    </span>
+                  </td>
+                  <td>
+                    <div className="segmented segmented-sm" role="group" aria-label={`Lato per ${label}`}>
+                      {SIDES.map((s) => (
+                        <button
+                          key={s.value}
+                          type="button"
+                          aria-pressed={(settings.sides[i] ?? 'none') === s.value}
+                          onClick={() => setSide(i, s.value)}
+                        >
+                          {s.label}
+                        </button>
+                      ))}
+                    </div>
+                  </td>
+                  <td>
+                    <input
+                      className="input mono"
+                      value={settings.commands[i] ?? String(i)}
+                      onChange={(e) => setCommand(i, e.target.value)}
+                    />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </section>

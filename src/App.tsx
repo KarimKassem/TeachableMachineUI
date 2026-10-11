@@ -109,7 +109,7 @@ export default function App() {
 
   const sendRaw = useCallback(
     async (text: string, withEnding = true) => {
-      const payload = withEnding ? text + settingsRef.current.lineEnding : text
+      const payload = withEnding ? text + '\n' : text
       try {
         await serial.send(payload)
         pushLog('out', text)
@@ -416,16 +416,17 @@ export default function App() {
           <StatusPill label="Webcam" tone={camTone} />
           {phase === 'run' && (
             <>
+              <span className="header-sep" aria-hidden />
               <button
                 type="button"
-                className="btn btn-sm"
+                className="btn btn-sm btn-primary"
                 aria-expanded={drawerOpen}
                 onClick={() => setDrawerOpen((o) => !o)}
               >
-                ⚙︎ {drawerOpen ? 'Nascondi' : 'Impostazioni'}
+                ⚙︎ {drawerOpen ? 'Nascondi impostazioni' : 'Impostazioni'}
               </button>
-              <button type="button" className="btn btn-sm btn-ghost" onClick={stopSorter}>
-                ← Setup
+              <button type="button" className="btn btn-sm btn-ink" onClick={stopSorter}>
+                ← Torna al setup
               </button>
             </>
           )}
